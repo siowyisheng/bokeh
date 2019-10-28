@@ -57,8 +57,10 @@ test:
     - boto
     - colorama
     - coverage
+    - firefox
     - flake8
     - flaky
+    - geckodriver
     - ipython <=7.9.0
     - isort >=4.3.21
     - lxml
