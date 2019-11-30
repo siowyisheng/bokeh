@@ -18,10 +18,6 @@ import pytest ; pytest
 import re
 from typing import Tuple
 
-# External imports
-from mock import patch
-from PIL import Image
-
 # Bokeh imports
 from bokeh.core.validation import silenced
 from bokeh.core.validation.warnings import MISSING_RENDERERS

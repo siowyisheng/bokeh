@@ -24,6 +24,7 @@ import os
 import warnings
 from os.path import abspath
 from tempfile import mkstemp
+from typing import Tuple
 
 # External imports
 from PIL import Image
@@ -194,10 +195,10 @@ def get_screenshot_as_png(obj, driver=None, timeout=5, **kwargs):
         web_driver.maximize_window()
         web_driver.get("file:///" + tmp.path)
         wait_until_render_complete(web_driver, timeout)
-        _maximize_viewport(web_driver)
+        [width, height] = _maximize_viewport(web_driver)
         png = web_driver.get_screenshot_as_png()
 
-    return Image.open(io.BytesIO(png)).convert("RGBA")
+    return Image.open(io.BytesIO(png)).convert("RGBA").crop((0, 0, width, height))
 
 def get_svgs(obj, driver=None, timeout=5, **kwargs):
     '''
@@ -236,9 +237,10 @@ def get_layout_html(obj, resources=INLINE, **kwargs):
     {% block preamble %}
     <style>
         html, body {
+            box-sizing: border-box;
             margin: 0;
-            width: 100%;
-            height: 100%;
+            border: 0;
+            padding: 0;
             overflow: hidden;
         }
     </style>
@@ -292,24 +294,33 @@ def wait_until_render_complete(driver, timeout):
 
 def _log_console(driver):
     levels = {'WARNING', 'ERROR', 'SEVERE'}
-    logs = driver.get_log('browser')
+    try:
+        logs = driver.get_log('browser')
+    except Exception:
+        return
     messages = [ log.get("message") for log in logs if log.get('level') in levels ]
     if len(messages) > 0:
         log.warning("There were browser warnings and/or errors that may have affected your export")
         for message in messages:
             log.warning(message)
 
-def _maximize_viewport(web_driver: WebDriver) -> None:
-    calculate_window_size = """\
+def _maximize_viewport(web_driver: WebDriver) -> Tuple[int, int]:
+    calculate_viewport_size = """\
         const root = document.getElementsByClassName("bk-root")[0]
         const {width, height} = root.children[0].getBoundingClientRect()
+        return [width, height]
+    """
+    viewport_size = web_driver.execute_script(calculate_viewport_size)
+    calculate_window_size = """\
+        const [width, height] = arguments
         return [
             window.outerWidth - window.innerWidth + width,
             window.outerHeight - window.innerHeight + height,
         ]
     """
-    [width, height] = web_driver.execute_script(calculate_window_size)
-    web_driver.set_window_size(width, height)
+    window_size = web_driver.execute_script(calculate_window_size, *viewport_size)
+    web_driver.set_window_size(*window_size)
+    return viewport_size
 
 _SVG_SCRIPT = """
 var serialized_svgs = [];

@@ -23,9 +23,6 @@ from importlib import import_module
 from types import ModuleType
 from typing import Optional
 
-# External imports
-from packaging.version import Version as V
-
 #-----------------------------------------------------------------------------
 # Globals and constants
 #-----------------------------------------------------------------------------
