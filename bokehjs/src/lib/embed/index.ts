@@ -60,17 +60,17 @@ async function _embed_items(docs_json: string | DocsJson, render_items: RenderIt
 
     if (item.docid != null) {
       add_document_standalone(docs[item.docid], element, roots, item.use_for_title)
-    } else if (item.sessionid != null) {
+    } else if (item.token != null) {
       const websocket_url = _get_ws_url(app_path, absolute_url)
       logger.debug(`embed: computed ws url: ${websocket_url}`)
 
       try {
-        await add_document_from_session(websocket_url, item.sessionid, element, roots, item.use_for_title)
+        await add_document_from_session(websocket_url, item.token, element, roots, item.use_for_title)
         console.log("Bokeh items were rendered successfully")
       } catch (error) {
         console.log("Error rendering Bokeh items:", error)
       }
     } else
-      throw new Error(`Error rendering Bokeh items: either 'docid' or 'sessionid' was expected.`)
+      throw new Error(`Error rendering Bokeh items: either 'docid' or 'token' was expected.`)
   }
 }
